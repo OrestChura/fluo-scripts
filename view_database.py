@@ -1,22 +1,23 @@
 import cv2
 import os
+import argparse
 import xml.etree.ElementTree as ET
-from fluo_lk_tracker import fluo_lk_track
-from fluo_null_traclker import fluo_null_track
+# from fluo_lk_tracker import fluo_lk_track
+# from fluo_null_traclker import fluo_null_track
 from fluo_tm_tracker import fluo_tm_track
 
-def file_count(path):
+def file_count(path_):
     count = 0
-    for f in os.listdir(path):
+    for f in os.listdir(path_):
         baseName, ext = os.path.splitext(f)
         if ext == '.jpg':
             count = count + 1
     return count
 
-def read_rect(path):
+def read_rect(path_):
     rects = []
-    thisFile = path
-    base = os.path.splitext(path)[0]+'.xml'
+    # thisFile = path_
+    base = os.path.splitext(path_)[0] + '.xml'
     if not os.path.exists(base):
         return None
     if not os.path.isfile(base):
@@ -37,27 +38,27 @@ def draw_circle(rects, image):
     for i in range(len(rects)):
         x = (rects[i][0] + rects[i][2]) / 2
         y = (rects[i][1] + rects[i][3]) / 2
-        r = (rects[i][2] - rects[i][0] ) / 2
+        r = (rects[i][2] - rects[i][0]) / 2
         cv2.circle(image, (int(x),int(y)), int(r), (0,255,0))
     return None
 
-def view_database(path):
-    print(file_count(path))
+def view_database(path_):
+    print(file_count(path_))
     r = None
     tracker = None
-    for f in os.listdir(path):
-        f = os.path.join(path, f)
+    for f in os.listdir(path_):
+        f = os.path.join(path_, f)
         baseName, ext = os.path.splitext(f)
         if ext == '.jpg':
             rect = read_rect(f)
             image = cv2.imread(f)
             if tracker is None:
                 tracker = fluo_tm_track((rect[0][0] + rect[0][2]) / 2, (rect[0][1] + rect[0][3]) / 2)
-                r = (rect[0][2] - rect[0][0] ) / 2
+                r = (rect[0][2] - rect[0][0]) / 2
             else:
-                x,y, res = tracker.fluo_predict(image)
-                cv2.circle(image, (int(x), int(y)), int(r), (0, 255, 255))
-            if not rect is None:
+                x, y, res = tracker.fluo_predict(image)
+                cv2.circle(image, (int(x),int(y)), int(r), (0,255,255))
+            if rect is not None:
                 draw_circle(rect, image)
             cv2.imshow("track", image)
             key = cv2.waitKey(0)
@@ -65,5 +66,13 @@ def view_database(path):
                 break
 
 if __name__ == '__main__':
-    path = "G:\\database\\fluovisor\\track00029\\"
+    cmdParser = argparse.ArgumentParser(
+        description='script to view database.\n'
+                    'Author: Alex A.Telnykh\n'
+                    'Date: 10.2020\n',
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    cmdParser.add_argument('path', help='data base directory')
+    cmdArgs = cmdParser.parse_args()
+    path = cmdArgs.path
+    # path = "G:\\database\\fluovisor\\track00029\\"
     view_database(path)

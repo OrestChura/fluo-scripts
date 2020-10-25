@@ -116,10 +116,11 @@ root
 import os
 import numpy as np
 import cv2
+import argparse
 
-track_count: int = 0
-file_count: int = 0
-out_dir: str = ''
+track_count = 0
+file_count = 0
+out_dir = ''
 def bytescaling(data, cmin=None, cmax=None, high=255, low=0):
     """
     Converting the input image to uint8 dtype and scaling
@@ -155,7 +156,24 @@ def bytescaling(data, cmin=None, cmax=None, high=255, low=0):
     bytedata = (data - cmin) * scale + low
     return (bytedata.clip(low, high) + 0.5).astype(np.uint8)
 
-def process_directory(dirName, dst):
+def getPictTrue(filename, wl):
+    """
+    Subtracts a background  frame ("filename_0.tiff") from a fluorescent frame on a given wavelength ("filename_wl.tiff")
+
+    :param filename: the full filename of a fluorescent frame
+    :param wl:       a wavelength of a fluorescent frame
+
+    :return: the true fluorescent picture
+    """
+    if filename.find('_' + str(wl)) != -1:
+        pictFluo = cv2.imread(filename, cv2.IMREAD_UNCHANGED)
+        pictNull = cv2.imread(filename.replace('_' + str(wl), '_0'), cv2.IMREAD_UNCHANGED)
+        pictFluo = (pictFluo - pictNull) * (pictFluo > pictNull) # cut the pixels where pictNull > pictFluo somehow
+        return pictFluo
+    print("ERROR: wrong filename")
+    return None
+
+def process_directory(dirName, dst_):
     global track_count
     global file_count
     global out_dir
@@ -164,30 +182,43 @@ def process_directory(dirName, dst):
         baseName, ext = os.path.splitext(f)
         if ext == '.tiff':
             if f.find('_740') != -1:
-                print("Copy [", baseName, "]")
-                image = cv2.imread(f, -1)
+                print("Copy [" + baseName + "]")
+                image = getPictTrue(f, wl=740)
                 img8 = bytescaling(image)
                 cv2.imwrite(os.path.join(out_dir, "{:05d}".format(file_count) + '.jpg'), img8)
                 file_count = file_count + 1
         elif os.path.isdir(f):
-            print("\nDescending into directory", f)
+            print("\nDescending into directory " + f)
             if f.find('Full') != -1:
                 track_count = track_count + 1
                 file_count = 0
-                if not os.path.isdir(os.path.join(dst, 'track' + "{:05d}".format(track_count))):
-                    os.mkdir(os.path.join(dst, 'track' + "{:05d}".format(track_count) ))
-                out_dir = os.path.join(dst, 'track' + "{:05d}".format(track_count))
-            process_directory(os.path.join(dirName, f), dst)
+                dst_track_path = os.path.join(dst_, 'track' + "{:05d}".format(track_count))
+                if not os.path.isdir(dst_track_path):
+                    os.mkdir(dst_track_path)
+                out_dir = dst_track_path
+            process_directory(os.path.join(dirName, f), dst_)
 
-def ConvertDatabase(path, dst):
-    if not os.path.isdir(dst):
-        print("make dir", dst)
-        os.mkdir(dst)
-    process_directory(path, dst)
+def ConvertDatabase(path_, dst_):
+    if not os.path.isdir(dst_):
+        print("make dir" + dst_)
+        os.mkdir(dst_)
+    process_directory(path_, dst_)
 
 
 if __name__ == '__main__':
+    cmdParser = argparse.ArgumentParser(
+        description='converting the input database of still images in the 16 bit TIFF format to'
+                    'the output database in the JPEG.\n'
+                    'Author: Alex A.Telnykh\n'
+                    'Date: 16.10.2020\n',
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    cmdParser.add_argument('path', help='the input data base directory')
+    cmdParser.add_argument('dst',  help='the output data base directory')
+    cmdArgs     = cmdParser.parse_args()
+
     # convert database
-    path = "G:\\database\\Fluo from Obninsk\\"
-    dst = "G:\\database\\fluovisor\\"
+    # path = "G:\\database\\Fluo from Obninsk\\"
+    # dst = "G:\\database\\fluovisor\\"
+    path = cmdArgs.path
+    dst = cmdArgs.dst
     ConvertDatabase(path, dst)
