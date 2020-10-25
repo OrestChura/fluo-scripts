@@ -15,7 +15,7 @@ class fluo_null_track(fluo_tracker):
     """
 
     def __init__(self, x, y, radius=100):
-        super().__init__(x, y, radius)
+        super(fluo_null_track, self).__init__(x, y, radius)
 
     def fluo_predict(self, image, blank=None):
         """

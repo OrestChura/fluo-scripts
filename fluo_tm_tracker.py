@@ -12,7 +12,7 @@ from fluo_track_core import fluo_tracker
 
 class fluo_tm_track(fluo_tracker):
     def __init__(self, x, y, radius=100):
-        super().__init__(x, y, radius)
+        super(fluo_tm_track, self).__init__(x, y, radius)
         self.Tmpl = None
 
     def fluo_predict(self, image, blank=None):

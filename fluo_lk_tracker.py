@@ -14,7 +14,7 @@ import math
 
 class fluo_lk_track(fluo_tracker):
     def __init__(self, x, y, radius=100):
-        super().__init__(x, y, radius)
+        super(fluo_lk_track, self).__init__(x, y, radius)
         self.features = None
         self.old_image = None
         self.new_image = None

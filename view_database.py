@@ -46,20 +46,21 @@ def view_database(path_):
     print(file_count(path_))
     r = None
     tracker = None
+    cv2.namedWindow("track", cv2.WINDOW_NORMAL)
     for f in os.listdir(path_):
         f = os.path.join(path_, f)
         baseName, ext = os.path.splitext(f)
         if ext == '.jpg':
-            rect = read_rect(f)
             image = cv2.imread(f)
-            if tracker is None:
-                tracker = fluo_tm_track((rect[0][0] + rect[0][2]) / 2, (rect[0][1] + rect[0][3]) / 2)
-                r = (rect[0][2] - rect[0][0]) / 2
-            else:
-                x, y, res = tracker.fluo_predict(image)
-                cv2.circle(image, (int(x),int(y)), int(r), (0,255,255))
+            rect = read_rect(f)
             if rect is not None:
                 draw_circle(rect, image)
+                if tracker is None:
+                    tracker = fluo_tm_track((rect[0][0] + rect[0][2]) / 2, (rect[0][1] + rect[0][3]) / 2)
+                    r = (rect[0][2] - rect[0][0]) / 2
+                else:
+                    x, y, res = tracker.fluo_predict(image)
+                    cv2.circle(image, (int(x),int(y)), int(r), (0,255,255))
             cv2.imshow("track", image)
             key = cv2.waitKey(0)
             if key == 27:

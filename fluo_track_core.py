@@ -1,6 +1,6 @@
 """
     abstract fluo tracker.
-    should track center of mass area of interest on the images taken
+    should track mass center of ROI on the images taken by
     FLOUVISOR device
 
     author: Alex A.Telnykh
@@ -10,7 +10,7 @@ class fluo_tracker(object):
     """an abstract point tracker
 
       any other tracker implementation must subclass it. All subclasses
-      must implement 'fluo_predict', that return a predicted point
+      must implement 'fluo_predict', which returns a predicted point
       position
     """
     def __init__(self, x, y, radius=100):

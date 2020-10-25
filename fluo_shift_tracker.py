@@ -15,7 +15,7 @@ import math
 
 class fluo_sift_track(fluo_tracker):
     def __init__(self, x, y, radius=100):
-        super().__init__(x, y, radius)
+        super(fluo_sift_track, self).__init__(x, y, radius)
         self.mask = np.zeros((960, 1280, 3), np.uint8)
         self._cx = self.x
         self._cy = self.y
