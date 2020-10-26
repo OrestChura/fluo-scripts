@@ -4,27 +4,10 @@ import math
 import cv2
 import argparse
 from view_database import read_rect
-from fluo_null_tracker import fluo_null_track
-from fluo_lk_tracker import fluo_lk_track
-from fluo_sift_tracker import fluo_sift_track
-from fluo_tm_tracker import fluo_tm_track
 from draw_gt import draw_ground_truth
+from fluo_track_create import create_tracker
 
 the_tracker = "null"
-
-
-def create_tracker(name, x, y):
-    if name == 'null':
-        return fluo_null_track(x, y)
-    elif name == 'lk':
-        return fluo_lk_track(x, y)
-    elif name == 'sift':
-        return fluo_sift_track(x, y, 200)
-    elif name == 'tm':
-        return fluo_tm_track(x, y)
-    else:
-        return None
-
 
 def calc_loss(x, y, x1, y1):
     return math.sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y))
