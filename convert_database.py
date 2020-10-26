@@ -177,7 +177,7 @@ def process_directory(dirName, dst_):
     global track_count
     global file_count
     global out_dir
-    for f in os.listdir(dirName):
+    for f in sorted(os.listdir(dirName)):
         f = os.path.join(dirName, f)
         baseName, ext = os.path.splitext(f)
         if ext == '.tiff':

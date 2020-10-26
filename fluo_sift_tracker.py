@@ -63,7 +63,7 @@ class fluo_sift_track(fluo_tracker):
                 pt2 = kp[m.trainIdx].pt
                 dx = pt2[0] - pt1[0]
                 dy = pt2[1] - pt1[1]
-                if not blank is None:
+                if blank is not None:
                     cv2.line(blank, (int(self.x), int(self.y)), (int(self.x + dx), int(self.y + dy)), (0, 255, 255))
 
                 self.x = self.x + dx

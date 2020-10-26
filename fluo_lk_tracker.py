@@ -58,7 +58,7 @@ class fluo_lk_track(fluo_tracker):
                 l = np.shape(good_old)[0]
                 dx = dx / l
                 dy = dy / l
-                if not blank is None:
+                if blank is not None:
                     cv2.line(blank, (int(self.x), int(self.y)), (int(self.x + dx), int(self.y + dy)), (0, 255, 255))
                 self.x += dx
                 self.y += dy

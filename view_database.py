@@ -6,14 +6,6 @@ import xml.etree.ElementTree as ET
 # from fluo_null_traclker import fluo_null_track
 from fluo_tm_tracker import fluo_tm_track
 
-def file_count(path_):
-    count = 0
-    for f in os.listdir(path_):
-        baseName, ext = os.path.splitext(f)
-        if ext == '.jpg':
-            count = count + 1
-    return count
-
 def read_rect(path_):
     rects = []
     # thisFile = path_
@@ -43,36 +35,37 @@ def draw_circle(rects, image):
     return None
 
 def view_database(path_):
-    print(file_count(path_))
     r = None
     tracker = None
     cv2.namedWindow("track", cv2.WINDOW_NORMAL)
-    for f in os.listdir(path_):
-        f = os.path.join(path_, f)
-        baseName, ext = os.path.splitext(f)
-        if ext == '.jpg':
-            image = cv2.imread(f)
-            rect = read_rect(f)
-            if rect is not None:
-                draw_circle(rect, image)
-                if tracker is None:
-                    tracker = fluo_tm_track((rect[0][0] + rect[0][2]) / 2, (rect[0][1] + rect[0][3]) / 2)
-                    r = (rect[0][2] - rect[0][0]) / 2
-                else:
-                    x, y, res = tracker.fluo_predict(image)
-                    cv2.circle(image, (int(x),int(y)), int(r), (0,255,255))
-            cv2.imshow("track", image)
-            key = cv2.waitKey(0)
-            if key == 27:
-                break
+
+    images = [os.path.join(path_, f) for f in sorted(os.listdir(path_))
+              if os.path.splitext(f)[1] == '.jpg']
+    print(len(images))
+
+    for f in images:
+        image = cv2.imread(f)
+        rect = read_rect(f)
+        if rect is not None:
+            draw_circle(rect, image)
+            if tracker is None:
+                tracker = fluo_tm_track((rect[0][0] + rect[0][2]) / 2, (rect[0][1] + rect[0][3]) / 2)
+                r = (rect[0][2] - rect[0][0]) / 2
+            else:
+                x, y, res = tracker.fluo_predict(image)
+                cv2.circle(image, (int(x),int(y)), int(r), (0,255,255))
+        cv2.imshow("track", image)
+        key = cv2.waitKey(0)
+        if key == 27:
+            break
 
 if __name__ == '__main__':
     cmdParser = argparse.ArgumentParser(
-        description='script to view database.\n'
+        description='script to view a track.\n'
                     'Author: Alex A.Telnykh\n'
                     'Date: 10.2020\n',
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    cmdParser.add_argument('path', help='data base directory')
+    cmdParser.add_argument('path', help='a track directory')
     cmdArgs = cmdParser.parse_args()
     path = cmdArgs.path
     # path = "G:\\database\\fluovisor\\track00029\\"
