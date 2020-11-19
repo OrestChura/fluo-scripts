@@ -117,10 +117,13 @@ import os
 import numpy as np
 import cv2
 import argparse
+from shutil import copyfile
 
 track_count = 0
 file_count = 0
 out_dir = ''
+temp_folder = None
+
 def bytescaling(data, cmin=None, cmax=None, high=255, low=0):
     """
     Converting the input image to uint8 dtype and scaling
@@ -168,7 +171,17 @@ def getPictTrue(filename, wl):
     if filename.find('_' + str(wl)) != -1:
         pictFluo = cv2.imread(filename, cv2.IMREAD_UNCHANGED)
         pictNull = cv2.imread(filename.replace('_' + str(wl), '_0'), cv2.IMREAD_UNCHANGED)
-        pictFluo = (pictFluo - pictNull) * (pictFluo > pictNull) # cut the pixels where pictNull > pictFluo somehow
+        if pictFluo is None or pictNull is None:                                                    # imread cannot open files with unsupported symbols (e.g., cyrillic)
+            copyfile(filename, os.path.join(temp_folder, 'pict.tiff'))                              # but copyfile can copy the. So copy to files with valid filename
+            copyfile(filename.replace('_' + str(wl), '_0'), os.path.join(temp_folder, 'zero.tiff'))
+            pictFluo = cv2.imread(os.path.join(temp_folder, 'pict.tiff'), cv2.IMREAD_UNCHANGED)
+            pictNull = cv2.imread(os.path.join(temp_folder, 'zero.tiff'), cv2.IMREAD_UNCHANGED)
+            if pictFluo is None or pictNull is None:
+                pictFluo = None
+            else:
+                pictFluo = (pictFluo - pictNull) * (pictFluo > pictNull)
+        else:
+            pictFluo = (pictFluo - pictNull) * (pictFluo > pictNull) # cut the pixels where pictNull > pictFluo somehow
         return pictFluo
     print("ERROR: wrong filename")
     return None
@@ -179,11 +192,15 @@ def process_directory(dirName, dst_):
     global out_dir
     for f in sorted(os.listdir(dirName)):
         f = os.path.join(dirName, f)
-        baseName, ext = os.path.splitext(f)
-        if ext == '.tiff':
-            if f.find('_740') != -1:
+        if os.path.isfile(f):
+            baseName, ext = os.path.splitext(f)
+            if ext == '.tiff' and f.find('_740') != -1:
                 print("Copy [" + baseName + "]")
                 image = getPictTrue(f, wl=740)
+                if image is None:
+                    print("ERROR: unsupported symbols in names, program cannot handle this. Rename the folder/files")
+                    return  # returns one directory level back
+                # noinspection PyTypeChecker
                 img8 = bytescaling(image)
                 cv2.imwrite(os.path.join(out_dir, "{:05d}".format(file_count) + '.jpg'), img8)
                 file_count = file_count + 1
@@ -214,11 +231,16 @@ if __name__ == '__main__':
         formatter_class=argparse.RawDescriptionHelpFormatter)
     cmdParser.add_argument('path', help='the input data base directory')
     cmdParser.add_argument('dst',  help='the output data base directory')
+    cmdParser.add_argument('temp',  help='the directory for some temporary files holding, space for 2 pcitures needed')
     cmdArgs     = cmdParser.parse_args()
 
     # convert database
     # path = "G:\\database\\Fluo from Obninsk\\"
     # dst = "G:\\database\\fluovisor\\"
+    # temp_folder = ...
     path = cmdArgs.path
     dst = cmdArgs.dst
+    temp_folder = cmdArgs.temp
+    if not os.path.isdir(temp_folder):
+        os.mkdir(temp_folder)
     ConvertDatabase(path, dst)
